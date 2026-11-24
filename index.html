@@ -265,6 +265,8 @@ const DAY1="2026-11-28",DAY2="2026-11-29";
 const S={lang:store.get("lang")||phoneLang(),team:+store.get("team")||45,day:1,open:new Set(),
   live:null,err:false,res:{},det:{},meta:{},teams:{},fetched:null,version:null,draws:null,courtByMid:{}};
 /* After an automatic reload for a new version: put back the open matches, day tab and scroll position. */
+/* Version of this page, stamped in at build time; compared with what the server reports. */
+const BUILD="__BUILD__";
 const RESTORE_KEY="ulsans-restore";
 let restoreY=null;
 try{const x=JSON.parse(sessionStorage.getItem(RESTORE_KEY)||"null");sessionStorage.removeItem(RESTORE_KEY);
@@ -349,7 +351,10 @@ async function loadResults(){
     const j=await getJSON("/api/results");
     S.live=true;
     if(j.ok){S.err=false;S.res=j.matches||{};S.fetched=j.fetched;
-      if(j.version){if(S.version&&j.version!==S.version)return reloadForUpdate(j.version);S.version=j.version}}
+      if(j.version){
+        const mine=/^[0-9a-f]{7,}$/.test(BUILD)?BUILD:S.version;
+        if(mine&&j.version!==mine)return reloadForUpdate(j.version);
+        S.version=j.version}}
     else S.err=true;
   }catch(e){if(S.live)S.err=true;else S.live=false}
   /* matches the page does not know yet: ask which teams play (cached on the server for hours) */

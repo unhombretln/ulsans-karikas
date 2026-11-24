@@ -1,0 +1,4 @@
+{
+  "buildCommand": "sed -i \"s/__BUILD__/${VERCEL_GIT_COMMIT_SHA:-dev}/\" index.html",
+  "outputDirectory": "."
+}
