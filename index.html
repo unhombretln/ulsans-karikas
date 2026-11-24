@@ -327,7 +327,10 @@ function rosterHTML(id,L){
 function scorePill(m){
   const r=S.res[m.mid],d=S.det[m.mid];
   const sc=(r&&r.score)||(d&&d.score);if(!sc)return "";
-  const [a,b]=mine(sc,m.home);const st=a+b>=5?(a>b?"win":"loss"):"live";
+  const [a,b]=mine(sc,m.home);
+  /* team score runs to 100 in this tournament (5 games × 20); the classic 3:2 count is kept as a fallback */
+  const done=Math.max(a,b)>=100||(Math.max(a,b)<=5&&a+b>=5);
+  const st=done?(a>b?"win":"loss"):"live";
   return `<span class="pill ${st}">${a}:${b}</span>`;
 }
 function gamesHTML(m,L){
