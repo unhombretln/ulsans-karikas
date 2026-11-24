@@ -70,6 +70,8 @@ select{appearance:none;-webkit-appearance:none;width:100%;font:600 17px/1.2 var(
 .opp small{display:block;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
 .opp b{display:block;font-weight:600;font-size:16.5px;line-height:1.25}
 .stage{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}
+.venue{display:flex;align-items:center;gap:4px;font-size:13.5px;color:var(--muted);margin-top:3px}
+.venue svg{flex:none}
 .chev{color:var(--muted);transition:transform .2s;flex:none}
 .game[data-open="true"] .chev{transform:rotate(180deg)}
 .game .detail{padding:0 14px 12px 94px}
@@ -263,7 +265,7 @@ function phoneLang(){
 }
 const DAY1="2026-11-28",DAY2="2026-11-29";
 const S={lang:store.get("lang")||phoneLang(),team:+store.get("team")||45,day:1,open:new Set(),
-  live:null,err:false,res:{},det:{},meta:{},teams:{},fetched:null,version:null,draws:null,courtByMid:{}};
+  live:null,err:false,res:{},det:{},meta:{},teams:{},fetched:null,version:null,draws:null,courtByMid:{},venueByMid:{}};
 /* After an automatic reload for a new version: put back the open matches, day tab and scroll position. */
 /* Version of this page, stamped in at build time; compared with what the server reports. */
 const BUILD="__BUILD__";
@@ -302,7 +304,7 @@ function allMatches(){
   const out=[],seen=new Set();
   for(const m of MATCHES){
     const r=S.res[m[4]];seen.add(String(m[4]));
-    out.push({mid:String(m[4]),team:m[0],opp:m[3],home:!!m[5],date:(r&&r.date)||m[1],time:(r&&r.time)||m[2],court:S.courtByMid[m[4]]||m[6]||null,oppName:NAMES[m[3]],stage:null});
+    out.push({mid:String(m[4]),team:m[0],opp:m[3],home:!!m[5],date:(r&&r.date)||m[1],time:(r&&r.time)||m[2],court:S.courtByMid[m[4]]||m[6]||null,venue:S.venueByMid[m[4]]||(OURS.find(x=>x.id===m[0]).lg==="2"?"Tehvandi":"Kääriku"),oppName:NAMES[m[3]],stage:null});
   }
   for(const [mid,r] of Object.entries(S.res)){
     if(seen.has(mid))continue;
@@ -312,7 +314,7 @@ function allMatches(){
     else if(OUR_IDS.has(mt.awayId)){team=mt.awayId;opp=mt.homeId;home=false}
     else continue;
     const parts=(r.draw||"").split(/\s+–\s+/).filter((x,i,a)=>a.indexOf(x)===i);
-    out.push({mid,team,opp,home,date:r.date,time:r.time,court:S.courtByMid[mid]||null,oppName:NAMES[opp]||(home?r.away:r.home)||"?",stage:parts.slice(1).join(" · ")||null});
+    out.push({mid,team,opp,home,date:r.date,time:r.time,court:S.courtByMid[mid]||null,venue:S.venueByMid[mid]||null,oppName:NAMES[opp]||(home?r.away:r.home)||"?",stage:parts.slice(1).join(" · ")||null});
   }
   return out;
 }
@@ -370,7 +372,7 @@ async function loadDraws(){
   if(!S.live)return;
   try{
     const j=await getJSON("/api/draws");
-    if(j.ok){S.draws=j.draws;const c={};j.draws.forEach(d=>d.rows.forEach(r=>{if(r.mid&&r.court)c[r.mid]=r.court}));S.courtByMid=c}
+    if(j.ok){S.draws=j.draws;const c={},v={};j.draws.forEach(d=>d.rows.forEach(r=>{if(r.mid&&r.court)c[r.mid]=r.court;if(r.mid&&r.venue)v[r.mid]=r.venue}));S.courtByMid=c;S.venueByMid=v}
   }catch(e){}
   render();
 }
@@ -426,13 +428,15 @@ function sundayOptions(t,L){
       /* the bracket's last round (final and 3rd-place match) tells how long the day can last */
       const last=best.d.rows.filter(x=>x.date===DAY2&&x.time).map(x=>x.time).sort().pop();
       body=`<span class="br">${esc(bracketName(best.d.name,L))}</span>
-        <div class="optrow"><span class="t">${best.r.time}</span>${best.r.court?`<span class="court">${L.court} ${esc(best.r.court)}</span>`:""}<span>${L.vs.toLowerCase()}: ${slotText(other,L)}</span></div>
+        <div class="optrow"><span class="t">${best.r.time}</span>${best.r.court?`<span class="court">${L.court} ${esc(best.r.court)}</span>`:""}<span>${L.vs.toLowerCase()}: ${slotText(other,L)}</span></div>${venueHTML(best.r.venue)}
         ${last&&last>best.r.time?`<span class="optlater">${L.later(last)}</span>`:""}`;
     }else body=`<span class="br">${L.none}</span>`;
     html+=`<div class="card opt"><span class="optn">${n}</span><div><b>${L.place(n)}</b>${body}</div></div>`;
   }
   return html;
 }
+const PIN='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>';
+const venueHTML=v=>v?`<span class="venue">${PIN}${esc(v)}</span>`:"";
 const CHEV='<svg class="chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
 function render(){
   const L=T[S.lang];document.documentElement.lang=S.lang;
@@ -463,7 +467,7 @@ function render(){
     else if(now<start&&now.slice(0,10)===m.date&&!nextFound){nextFound=true;cls="is-next";badge=`<span class="badge next">${L.next}</span>`}
     const open=S.open.has(m.mid);
     const stage=m.stage?`<small class="stage">${esc(m.stage)}</small>`:"";
-    return `<div class="card game ${cls}" data-open="${open}"><button type="button" class="row" data-k="${m.mid}" data-opp="${m.opp}" aria-expanded="${open}"><span class="tblock"><span class="time">${m.time}</span>${m.court?`<span class="court">${L.court} ${esc(m.court)}</span>`:""}</span><span class="opp"><small>${L.vs}</small><b>${esc(m.oppName)}</b>${stage}${badge}</span>${scorePill(m)}${CHEV}</button>${open?`<div class="detail">${gamesHTML(m,L)}${S.live?`<div class="sub">${L.lineup}</div>`:""}${rosterHTML(m.opp,L)}<a class="tslink" href="${TS+m.mid}" target="_blank" rel="noopener">${L.ts} ↗</a></div>`:""}</div>`;
+    return `<div class="card game ${cls}" data-open="${open}"><button type="button" class="row" data-k="${m.mid}" data-opp="${m.opp}" aria-expanded="${open}"><span class="tblock"><span class="time">${m.time}</span>${m.court?`<span class="court">${L.court} ${esc(m.court)}</span>`:""}</span><span class="opp"><small>${L.vs}</small><b>${esc(m.oppName)}</b>${stage}${venueHTML(m.venue)}${badge}</span>${scorePill(m)}${CHEV}</button>${open?`<div class="detail">${gamesHTML(m,L)}${S.live?`<div class="sub">${L.lineup}</div>`:""}${rosterHTML(m.opp,L)}<a class="tslink" href="${TS+m.mid}" target="_blank" rel="noopener">${L.ts} ↗</a></div>`:""}</div>`;
   }).join("");
 }
 
