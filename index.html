@@ -248,9 +248,9 @@ const TX={
 Object.keys(TX).forEach(l=>Object.assign(T[l],TX[l]));
 const ORD=n=>n+(n===1?"st":n===2?"nd":n===3?"rd":"th");
 const TX2={
- et:{court:"Väljak",optNote:"Pühapäeva mängud sõltuvad kohast alagrupis. Pärast laupäeva ilmuvad siia päris vastased.",place:n=>`${n}. koht alagrupis`,ph:(g,n)=>`${g}-alagrupi ${n}. koht`,prev:"eelmise ringi võitja",later:"Edasi samas tabelis:",none:"Selle kohaga pühapäeval mänge ei ole",pos:(a,b)=>`Kohad ${a}–${b}`,koht:n=>`Mäng ${n}. koha eest`},
- ru:{court:"Корт",optNote:"Игры воскресенья зависят от места в группе. После субботы здесь появятся настоящие соперники.",place:n=>`${n}-е место в группе`,ph:(g,n)=>`${n}-е место группы ${g}`,prev:"победитель предыдущего круга",later:"Дальше в этой сетке:",none:"С этим местом в воскресенье игр нет",pos:(a,b)=>`Места ${a}–${b}`,koht:n=>`Сетка за ${n}-е место`},
- en:{court:"Court",optNote:"Sunday depends on your place in the group. Real opponents appear here after Saturday.",place:n=>`${ORD(n)} in the group`,ph:(g,n)=>`${ORD(n)} in group ${g}`,prev:"winner of the previous round",later:"Later rounds:",none:"No Sunday matches for this place",pos:(a,b)=>`Places ${a}–${b}`,koht:n=>`Bracket for place ${n}`}};
+ et:{court:"Väljak",optNote:"Pühapäeva mängud sõltuvad kohast alagrupis. Pärast laupäeva ilmuvad siia päris vastased.",place:n=>`${n}. koht alagrupis`,ph:(g,n)=>`${g}-alagrupi ${n}. koht`,prev:"eelmise ringi võitja",later:t=>`Tabeli viimased mängud kell ${t}`,none:"Selle kohaga pühapäeval mänge ei ole",pos:(a,b)=>`Kohad ${a}–${b}`,koht:n=>`Mäng ${n}. koha eest`},
+ ru:{court:"Корт",optNote:"Игры воскресенья зависят от места в группе. После субботы здесь появятся настоящие соперники.",place:n=>`${n}-е место в группе`,ph:(g,n)=>`${n}-е место группы ${g}`,prev:"победитель предыдущего круга",later:t=>`Последние игры этой сетки в ${t}`,none:"С этим местом в воскресенье игр нет",pos:(a,b)=>`Места ${a}–${b}`,koht:n=>`Сетка за ${n}-е место`},
+ en:{court:"Court",optNote:"Sunday depends on your place in the group. Real opponents appear here after Saturday.",place:n=>`${ORD(n)} in the group`,ph:(g,n)=>`${ORD(n)} in group ${g}`,prev:"winner of the previous round",later:t=>`This bracket ends with matches at ${t}`,none:"No Sunday matches for this place",pos:(a,b)=>`Places ${a}–${b}`,koht:n=>`Bracket for place ${n}`}};
 Object.keys(TX2).forEach(l=>Object.assign(T[l],TX2[l]));
 const LEAGUE_ON_SITE={E:"Esiliiga","2":"2.liiga","3":"3.liiga",R:"Rahvaliiga"};
 const TS="https://www.tournamentsoftware.com/sport/teammatch.aspx?id=9CA77EC2-61DB-4937-B9AC-024A0704CA09&match=";
@@ -415,10 +415,11 @@ function sundayOptions(t,L){
     let body;
     if(best){
       const other=best.r.home===ph?best.r.away:best.r.home;
-      const later=[...new Set(best.d.rows.filter(x=>x.date===DAY2&&x.time&&x.time>best.r.time).map(x=>x.time))].sort();
+      /* the bracket's last round (final and 3rd-place match) tells how long the day can last */
+      const last=best.d.rows.filter(x=>x.date===DAY2&&x.time).map(x=>x.time).sort().pop();
       body=`<span class="br">${esc(bracketName(best.d.name,L))}</span>
         <div class="optrow"><span class="t">${best.r.time}</span>${best.r.court?`<span class="court">${L.court} ${esc(best.r.court)}</span>`:""}<span>${L.vs.toLowerCase()}: ${slotText(other,L)}</span></div>
-        ${later.length?`<span class="optlater">${L.later} ${later.join(", ")}</span>`:""}`;
+        ${last&&last>best.r.time?`<span class="optlater">${L.later(last)}</span>`:""}`;
     }else body=`<span class="br">${L.none}</span>`;
     html+=`<div class="card opt"><span class="optn">${n}</span><div><b>${L.place(n)}</b>${body}</div></div>`;
   }
