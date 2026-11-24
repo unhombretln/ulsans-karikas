@@ -49,8 +49,9 @@ label.lbl{font:600 11.5px/1 var(--f-body);text-transform:uppercase;letter-spacin
 .selwrap{position:relative}
 select{appearance:none;-webkit-appearance:none;width:100%;font:600 17px/1.2 var(--f-body);color:var(--fg);background:var(--surface);border:1.5px solid var(--line);border-radius:10px;padding:14px 44px 14px 14px;cursor:pointer}
 .selwrap svg{position:absolute;right:14px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--muted)}
-.tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--surface-2);border-radius:10px;padding:4px;gap:4px}
-.tabs button{border:0;background:transparent;color:var(--muted);font:600 14px/1.2 var(--f-body);padding:10px 6px;border-radius:7px;cursor:pointer}
+.tabs{display:grid;grid-template-columns:1fr 1fr 1fr;background:var(--surface-2);border-radius:10px;padding:4px;gap:4px}
+.tabs button{border:0;background:transparent;color:var(--muted);font:600 14px/1.2 var(--f-body);padding:8px 4px;border-radius:7px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0}
+.tabs button small{font-weight:500;font-size:12px;opacity:.8}
 .tabs button[aria-selected="true"]{background:var(--surface);color:var(--fg);box-shadow:0 1px 2px rgba(10,16,34,.12)}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:12px}
 .team{padding:16px;display:flex;flex-direction:column;gap:12px}
@@ -90,6 +91,19 @@ select{appearance:none;-webkit-appearance:none;width:100%;font:600 17px/1.2 var(
 .opt .br{display:block;font-size:12.5px;color:var(--muted);margin-top:1px}
 .optrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin-top:8px;font-size:14.5px}
 .optrow .t{font:700 20px/1 var(--f-display);font-variant-numeric:tabular-nums;color:var(--fg)}
+.meals{display:flex;flex-direction:column;gap:10px}
+.mday{padding:14px}
+.mday h3{margin:0 0 8px;font-family:var(--f-display);font-size:17px;font-weight:700}
+.mrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;padding:7px 0;border-top:1px solid var(--line);align-items:baseline}
+.mrow:first-of-type{border-top:0}
+.mrow b{font-weight:600}
+.mrow .mt{font:700 16px/1.2 var(--f-display);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.mrow .ms{grid-column:1/-1;font-size:13.5px;color:var(--muted)}
+.mrow.inc .ms{color:var(--blue)}
+.mrow.ord .ms{color:var(--coral)}
+.mrow.no .mt{color:var(--muted)}
+.mwhere{font-size:14px;margin-top:8px;padding:9px 11px;border-radius:8px;background:var(--surface-2)}
+.mnotes{margin:0;padding-left:18px;font-size:14px;color:var(--muted);display:flex;flex-direction:column;gap:4px}
 .optlater{display:block;font-size:12.5px;color:var(--muted);margin-top:6px}
 .pill{font:700 17px/1 var(--f-display);font-variant-numeric:tabular-nums;padding:6px 9px;border-radius:7px;flex:none}
 .pill.win{background:var(--blue);color:#fff}
@@ -158,6 +172,7 @@ body{margin:0}
     <div class="tabs" role="tablist">
       <button type="button" role="tab" id="d1" data-d="1" aria-selected="true"></button>
       <button type="button" role="tab" id="d2" data-d="2" aria-selected="false"></button>
+      <button type="button" role="tab" id="d3" data-d="3" aria-selected="false"></button>
     </div>
     <section class="card team" id="teamcard"></section>
     <div class="sect"><label class="lbl" id="t-sched"></label><span id="t-hint"></span></div>
@@ -254,6 +269,53 @@ const TX2={
  ru:{court:"Корт",optNote:"Игры воскресенья зависят от места в группе. После субботы здесь появятся настоящие соперники.",place:n=>`${n}-е место в группе`,ph:(g,n)=>`${n}-е место группы ${g}`,prev:"победитель предыдущего круга",later:t=>`Последний круг этой сетки начинается в ${t}`,none:"С этим местом в воскресенье игр нет",pos:(a,b)=>`Места ${a}–${b}`,koht:n=>`Сетка за ${n}-е место`},
  en:{court:"Court",optNote:"Sunday depends on your place in the group. Real opponents appear here after Saturday.",place:n=>`${ORD(n)} in the group`,ph:(g,n)=>`${ORD(n)} in group ${g}`,prev:"winner of the previous round",later:t=>`The last round of this bracket starts at ${t}`,none:"No Sunday matches for this place",pos:(a,b)=>`Places ${a}–${b}`,koht:n=>`Bracket for place ${n}`}};
 Object.keys(TX2).forEach(l=>Object.assign(T[l],TX2[l]));
+/* Meals: from the organisers' memo "Klubide Karikas 2026 meelespea". */
+const MEMO="https://docs.google.com/document/d/1J2_N6IRg41eBjhbaaQBuob_cx8MHKojYxdnhq4eqodg/mobilebasic";
+const MEAL_TIMES={b:"7:30–10:00",l:"12:00–14:30",d:"17:30–20:30"};
+const TX3={
+ et:{tabs:[["Laupäev","28.11"],["Pühapäev","29.11"],["Toitlustus","27.–29.11"]],meals:"Toitlustus",
+  mb:"Hommikusöök",ml:"Lõunasöök",md:"Õhtusöök",inc:"Paketis",no:"Paketis ei ole",
+  ord:"Telli hotelli fuajeest vähemalt 24 h ette ja tasu kohapeal. Ilma tellimata palume mitte sööma minna.",
+  days:["Reede 27.11","Laupäev 28.11","Pühapäev 29.11"],fri:"Meie liigadel paketis toitu ei ole (Meistriliigal on õhtusöök).",
+  same:"Söögiajad on Kääriku ja Tehvandi sööklas samad.",
+  satWhere:v=>`Laupäeval sööd seal, kus mängid: Tehvandil mängijad (2. liiga) Tehvandi hotelli buffees, Käärikul mängijad Käärikul, olenemata majutusest. Sinu võistkond: <b>${v}</b>.`,
+  sunWhere:"Kus pühapäeva hommikusöök on, meelespeas ei ole kirjas. Küsi hotellist.",
+  notes:["Toitu sööklast kaasa võtta ei saa.","Ilma majutuseta osalejad tellivad ja tasuvad söögi alati ise."],
+  memo:"Allikas: korraldajate meelespea"},
+ ru:{tabs:[["Суббота","28.11"],["Воскресенье","29.11"],["Питание","27–29.11"]],meals:"Питание",
+  mb:"Завтрак",ml:"Обед",md:"Ужин",inc:"Входит в пакет",no:"Не входит в пакет",
+  ord:"Заказать в фойе отеля минимум за 24 часа и оплатить на месте. Без заказа не приходить.",
+  days:["Пятница 27.11","Суббота 28.11","Воскресенье 29.11"],fri:"Для наших лиг питание в пакет не входит (ужин есть только у Meistriliiga).",
+  same:"Время одинаковое в столовых Kääriku и Tehvandi.",
+  satWhere:v=>`В субботу ешь там, где играешь: кто в Tehvandi (2. liiga) — в буфете отеля Tehvandi, кто в Kääriku — в Kääriku, где бы ни жил. Твоя команда: <b>${v}</b>.`,
+  sunWhere:"Где воскресный завтрак, в памятке не сказано. Уточни в отеле.",
+  notes:["Еду из столовой выносить нельзя.","Если живёшь не в отеле турнира, питание всегда заказываешь и оплачиваешь сам."],
+  memo:"Источник: памятка организаторов"},
+ en:{tabs:[["Saturday","28.11"],["Sunday","29.11"],["Meals","27–29.11"]],meals:"Meals",
+  mb:"Breakfast",ml:"Lunch",md:"Dinner",inc:"Included",no:"Not included",
+  ord:"Order at the hotel lobby at least 24 h ahead and pay there. Please don't come without ordering.",
+  days:["Friday 27.11","Saturday 28.11","Sunday 29.11"],fri:"No meals included for our leagues (only Meistriliiga has dinner).",
+  same:"Times are the same in the Kääriku and Tehvandi canteens.",
+  satWhere:v=>`On Saturday you eat where you play: Tehvandi players (2. liiga) at the Tehvandi hotel buffet, Kääriku players at Kääriku, wherever you stay. Your team: <b>${v}</b>.`,
+  sunWhere:"The memo doesn't say where Sunday breakfast is. Ask at your hotel.",
+  notes:["Food can't be taken out of the canteen.","Without tournament accommodation you always order and pay for meals yourself."],
+  memo:"Source: organisers' memo"}};
+Object.keys(TX3).forEach(l=>Object.assign(T[l],TX3[l]));
+function mealsHTML(t,L){
+  const row=(name,time,state,note)=>`<div class="mrow ${state}"><b>${name}</b><span class="mt">${time}</span><span class="ms">${note}</span></div>`;
+  const venue=t.lg==="2"?"Tehvandi":"Kääriku";
+  return `<div class="meals">
+    <p class="optnote">${L.same}</p>
+    <div class="card mday"><h3>${L.days[0]}</h3><p class="optnote">${L.fri}</p></div>
+    <div class="card mday"><h3>${L.days[1]}</h3>
+      ${row(L.mb,MEAL_TIMES.b,"no",L.no)}${row(L.ml,MEAL_TIMES.l,"inc",L.inc)}${row(L.md,MEAL_TIMES.d,"inc",L.inc)}
+      <div class="mwhere">${L.satWhere(venue)}</div></div>
+    <div class="card mday"><h3>${L.days[2]}</h3>
+      ${row(L.mb,MEAL_TIMES.b,"inc",L.inc+". "+L.sunWhere)}${row(L.ml,MEAL_TIMES.l,"ord",L.no+". "+L.ord)}${row(L.md,"—","no",L.no)}</div>
+    <ul class="mnotes">${L.notes.map(n=>`<li>${n}</li>`).join("")}</ul>
+    <a class="tslink" href="${MEMO}" target="_blank" rel="noopener">${L.memo} ↗</a>
+  </div>`;
+}
 const LEAGUE_ON_SITE={E:"Esiliiga","2":"2.liiga","3":"3.liiga",R:"Rahvaliiga"};
 const TS="https://www.tournamentsoftware.com/sport/teammatch.aspx?id=9CA77EC2-61DB-4937-B9AC-024A0704CA09&match=";
 const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
@@ -272,7 +334,7 @@ const BUILD="__BUILD__";
 const RESTORE_KEY="ulsans-restore";
 let restoreY=null;
 try{const x=JSON.parse(sessionStorage.getItem(RESTORE_KEY)||"null");sessionStorage.removeItem(RESTORE_KEY);
-  if(x){(x.open||[]).forEach(k=>S.open.add(String(k)));if(x.day===1||x.day===2)S.day=x.day;restoreY=x.y||0}}catch(e){}
+  if(x){(x.open||[]).forEach(k=>S.open.add(String(k)));if([1,2,3].includes(x.day))S.day=x.day;restoreY=x.y||0}}catch(e){}
 /* A newer version of the page was deployed: reload once, keeping what the viewer had open. */
 function reloadForUpdate(v){
   try{if(sessionStorage.getItem("ulsans-reloaded")===v)return;sessionStorage.setItem("ulsans-reloaded",v);
@@ -441,14 +503,18 @@ const CHEV='<svg class="chev" width="20" height="20" viewBox="0 0 24 24" fill="n
 function render(){
   const L=T[S.lang];document.documentElement.lang=S.lang;
   ["et","ru","en"].forEach(l=>$("l-"+l).setAttribute("aria-pressed",l===S.lang));
-  $("t-team").textContent=L.team;$("d1").textContent=L.d1;$("d2").textContent=L.d2;
-  $("d1").setAttribute("aria-selected",S.day===1);$("d2").setAttribute("aria-selected",S.day===2);
+  $("t-team").textContent=L.team;
+  [1,2,3].forEach(n=>{const b=$("d"+n);b.innerHTML=`<span>${L.tabs[n-1][0]}</span><small>${L.tabs[n-1][1]}</small>`;b.setAttribute("aria-selected",S.day===n)});
   $("t-sched").textContent=L.sched;$("t-src").textContent=L.src;$("t-site").textContent=L.site;
   buildSelect(L);
   const t=OURS.find(x=>x.id===S.team);const r=R[t.id];
   $("teamcard").innerHTML=`<h2>${esc(t.name)}</h2><div class="meta"><span class="chip league">${L.lg[t.lg]}</span><span class="chip">${groupLabel(t,L)}</span><span class="chip">${r[0].length+r[1].length} ${L.players}</span></div>${rosterHTML(t.id,L)}`;
   const lb=$("livebar");lb.hidden=!S.live;
   if(S.live){lb.className="livebar"+(S.err?" err":"");lb.textContent=S.err?L.err:L.live+(S.fetched?" · "+L.upd+" "+tallinnTime(S.fetched):"")}
+  if(S.day===3){
+    $("t-sched").textContent=L.meals;$("t-hint").textContent="";lb.hidden=true;
+    $("games").innerHTML=mealsHTML(t,L);return;
+  }
   const day=S.day===1?DAY1:DAY2;
   const list=allMatches().filter(m=>m.team===t.id&&m.date===day).sort((a,b)=>a.time.localeCompare(b.time));
   const games=$("games");
