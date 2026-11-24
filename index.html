@@ -246,7 +246,18 @@ function phoneLang(){
 }
 const DAY1="2026-11-28",DAY2="2026-11-29";
 const S={lang:store.get("lang")||phoneLang(),team:+store.get("team")||45,day:1,open:new Set(),
-  live:null,err:false,res:{},det:{},meta:{},teams:{},fetched:null};
+  live:null,err:false,res:{},det:{},meta:{},teams:{},fetched:null,version:null};
+/* After an automatic reload for a new version: put back the open matches, day tab and scroll position. */
+const RESTORE_KEY="ulsans-restore";
+let restoreY=null;
+try{const x=JSON.parse(sessionStorage.getItem(RESTORE_KEY)||"null");sessionStorage.removeItem(RESTORE_KEY);
+  if(x){(x.open||[]).forEach(k=>S.open.add(String(k)));if(x.day===1||x.day===2)S.day=x.day;restoreY=x.y||0}}catch(e){}
+/* A newer version of the page was deployed: reload once, keeping what the viewer had open. */
+function reloadForUpdate(v){
+  try{if(sessionStorage.getItem("ulsans-reloaded")===v)return;sessionStorage.setItem("ulsans-reloaded",v);
+    sessionStorage.setItem(RESTORE_KEY,JSON.stringify({open:[...S.open],day:S.day,y:window.scrollY||0}))}catch(e){return}
+  location.reload();
+}
 if(!T[S.lang])S.lang="en";
 if(!OURS.some(t=>t.id===S.team))S.team=45;
 const $=id=>document.getElementById(id);
@@ -259,7 +270,7 @@ function nowTallinn(){
   const p=new Intl.DateTimeFormat("sv-SE",{timeZone:"Europe/Tallinn",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hour12:false}).format(new Date());
   return p.replace(" ","T");
 }
-if(nowTallinn().slice(0,10)>=DAY2)S.day=2;
+if(restoreY===null&&nowTallinn().slice(0,10)>=DAY2)S.day=2;
 function addMin(dt,m){const d=new Date(dt+":00Z");d.setUTCMinutes(d.getUTCMinutes()+m);return d.toISOString().slice(0,16)}
 const tallinnTime=iso=>new Intl.DateTimeFormat("et-EE",{timeZone:"Europe/Tallinn",hour:"2-digit",minute:"2-digit"}).format(new Date(iso));
 const names=a=>a&&a.length?a.map(n=>esc(flip(n))).join(" / "):"—";
@@ -320,7 +331,9 @@ async function loadResults(){
   try{
     const j=await getJSON("/api/results");
     S.live=true;
-    if(j.ok){S.err=false;S.res=j.matches||{};S.fetched=j.fetched}else S.err=true;
+    if(j.ok){S.err=false;S.res=j.matches||{};S.fetched=j.fetched;
+      if(j.version){if(S.version&&j.version!==S.version)return reloadForUpdate(j.version);S.version=j.version}}
+    else S.err=true;
   }catch(e){if(S.live)S.err=true;else S.live=false}
   /* matches the page does not know yet: ask which teams play (cached on the server for hours) */
   const known=new Set(MATCHES.map(m=>String(m[4])));
@@ -407,6 +420,7 @@ setInterval(()=>{render();refresh()},60000);
 document.addEventListener("visibilitychange",refresh);
 
 render();paintThemeBtn();loadResults();
+if(restoreY)requestAnimationFrame(()=>window.scrollTo(0,restoreY));
 </script>
 </body>
 </html>
