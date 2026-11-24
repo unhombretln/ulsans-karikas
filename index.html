@@ -4,6 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0A1022">
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="apple-mobile-web-app-title" content="Ulsans">
 <title>Ulsans Klubide Karikas</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -65,6 +69,7 @@ select{appearance:none;-webkit-appearance:none;width:100%;font:600 17px/1.2 var(
 .opp{flex:1;min-width:0}
 .opp small{display:block;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
 .opp b{display:block;font-weight:600;font-size:16.5px;line-height:1.25}
+.stage{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}
 .chev{color:var(--muted);transition:transform .2s;flex:none}
 .game[data-open="true"] .chev{transform:rotate(180deg)}
 .game .detail{padding:0 14px 12px 94px}
@@ -233,66 +238,111 @@ const TX={
 Object.keys(TX).forEach(l=>Object.assign(T[l],TX[l]));
 const TS="https://www.tournamentsoftware.com/sport/teammatch.aspx?id=9CA77EC2-61DB-4937-B9AC-024A0704CA09&match=";
 const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
-const S={lang:store.get("lang")||"ru",team:+store.get("team")||45,day:1,open:new Set(),live:null,err:false,res:{},det:{},fetched:null};
-if(!T[S.lang])S.lang="ru";
+/* Language: the viewer's own choice, otherwise the phone's language (et/ru/en), otherwise English. */
+function phoneLang(){
+  const list=(navigator.languages&&navigator.languages.length?navigator.languages:[navigator.language||""]);
+  for(const l of list){const c=String(l).slice(0,2).toLowerCase();if(c==="et"||c==="ru"||c==="en")return c}
+  return "en";
+}
+const DAY1="2026-11-28",DAY2="2026-11-29";
+const S={lang:store.get("lang")||phoneLang(),team:+store.get("team")||45,day:1,open:new Set(),
+  live:null,err:false,res:{},det:{},meta:{},teams:{},fetched:null};
+if(!T[S.lang])S.lang="en";
 if(!OURS.some(t=>t.id===S.team))S.team=45;
 const $=id=>document.getElementById(id);
-const esc=s=>s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const flip=n=>{const i=n.indexOf(", ");return i<0?n:n.slice(i+2)+" "+n.slice(0,i)};
 const groupLabel=(t,L)=>L.group.charAt(0).toUpperCase()+L.group.slice(1)+" "+t.g;
+const OUR_IDS=new Set(OURS.map(t=>t.id));
 
-function rosterHTML(id,L){
-  const r=R[id];if(!r)return "";
-  return '<ul class="roster">'+r[0].map(n=>`<li><span class="sx">${L.m}</span><span>${esc(flip(n))}</span></li>`).join("")+r[1].map(n=>`<li><span class="sx">${L.w}</span><span>${esc(flip(n))}</span></li>`).join("")+"</ul>";
-}
 function nowTallinn(){
   const p=new Intl.DateTimeFormat("sv-SE",{timeZone:"Europe/Tallinn",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hour12:false}).format(new Date());
   return p.replace(" ","T");
 }
+if(nowTallinn().slice(0,10)>=DAY2)S.day=2;
 function addMin(dt,m){const d=new Date(dt+":00Z");d.setUTCMinutes(d.getUTCMinutes()+m);return d.toISOString().slice(0,16)}
-
 const tallinnTime=iso=>new Intl.DateTimeFormat("et-EE",{timeZone:"Europe/Tallinn",hour:"2-digit",minute:"2-digit"}).format(new Date(iso));
 const names=a=>a&&a.length?a.map(n=>esc(flip(n))).join(" / "):"—";
 /* the site gives scores as [home, away]; turn them into [Ulsans, opponent] */
 const mine=(p,home)=>home?[p[0],p[1]]:[p[1],p[0]];
+
+/* All Ulsans matches: Saturday from the data above, corrected by the live site (time changes),
+   plus any match the site adds later (Sunday), once we know which two teams play in it. */
+function allMatches(){
+  const out=[],seen=new Set();
+  for(const m of MATCHES){
+    const r=S.res[m[4]];seen.add(String(m[4]));
+    out.push({mid:String(m[4]),team:m[0],opp:m[3],home:!!m[5],date:(r&&r.date)||m[1],time:(r&&r.time)||m[2],oppName:NAMES[m[3]],stage:null});
+  }
+  for(const [mid,r] of Object.entries(S.res)){
+    if(seen.has(mid))continue;
+    const mt=S.meta[mid];if(!mt)continue;
+    let team,opp,home;
+    if(OUR_IDS.has(mt.homeId)){team=mt.homeId;opp=mt.awayId;home=true}
+    else if(OUR_IDS.has(mt.awayId)){team=mt.awayId;opp=mt.homeId;home=false}
+    else continue;
+    const parts=(r.draw||"").split(/\s+–\s+/).filter((x,i,a)=>a.indexOf(x)===i);
+    out.push({mid,team,opp,home,date:r.date,time:r.time,oppName:NAMES[opp]||(home?r.away:r.home)||"?",stage:parts.slice(1).join(" · ")||null});
+  }
+  return out;
+}
+function rosterOf(id){
+  if(R[id])return R[id];
+  const t=S.teams[id];return t?[t.men,[...t.women,...(t.other||[])]]:null;
+}
+function rosterHTML(id,L){
+  const r=rosterOf(id);if(!r)return S.live?`<p class="note">${L.loading}</p>`:"";
+  return '<ul class="roster">'+r[0].map(n=>`<li><span class="sx">${L.m}</span><span>${esc(flip(n))}</span></li>`).join("")+r[1].map(n=>`<li><span class="sx">${L.w}</span><span>${esc(flip(n))}</span></li>`).join("")+"</ul>";
+}
 function scorePill(m){
-  const r=S.res[m[4]],d=S.det[m[4]];
+  const r=S.res[m.mid],d=S.det[m.mid];
   const sc=(r&&r.score)||(d&&d.score);if(!sc)return "";
-  const [a,b]=mine(sc,m[5]);const st=a+b>=5?(a>b?"win":"loss"):"live";
+  const [a,b]=mine(sc,m.home);const st=a+b>=5?(a>b?"win":"loss"):"live";
   return `<span class="pill ${st}">${a}:${b}</span>`;
 }
 function gamesHTML(m,L){
   if(!S.live)return "";
-  const d=S.det[m[4]];
+  const d=S.det[m.mid];
   if(!d)return `<p class="note">${L.loading}</p>`;
   const played=(d.games||[]).filter(g=>g.sets.length||g.note);
   if(!played.length)return `<p class="note">${L.noRes}</p>`;
   return '<div class="gms">'+d.games.map(g=>{
-    const ours=m[5]?g.h:g.a,theirs=m[5]?g.a:g.h;
-    const win=g.w&&((m[5]&&g.w===1)||(!m[5]&&g.w===2));
+    const ours=m.home?g.h:g.a,theirs=m.home?g.a:g.h;
+    const win=g.w&&((m.home&&g.w===1)||(!m.home&&g.w===2));
     const cls=g.w?(win?"win":"loss"):"";
-    const sets=g.sets.map(x=>mine(x,m[5]).join("-")).join(" ")||esc(g.note||"");
+    const sets=g.sets.map(x=>mine(x,m.home).join("-")).join(" ")||esc(g.note||"");
     return `<div class="gm ${cls}"><span class="ev">${L.ev[g.ev]||esc(g.ev)}</span><span class="pp"><span>${names(ours)}</span><small>${names(theirs)}</small></span><span class="sets">${sets}</span></div>`;
   }).join("")+"</div>";
 }
+
+const getJSON=async u=>{const r=await fetch(u,{cache:"no-store"});return r.json()};
 async function loadResults(){
   try{
-    const r=await fetch("/api/results",{cache:"no-store"});
-    const j=await r.json();
+    const j=await getJSON("/api/results");
     S.live=true;
     if(j.ok){S.err=false;S.res=j.matches||{};S.fetched=j.fetched}else S.err=true;
   }catch(e){if(S.live)S.err=true;else S.live=false}
+  /* matches the page does not know yet: ask which teams play (cached on the server for hours) */
+  const known=new Set(MATCHES.map(m=>String(m[4])));
+  const missing=Object.keys(S.res).filter(mid=>!known.has(mid)&&!S.meta[mid]);
+  await Promise.all(missing.map(async mid=>{try{const j=await getJSON("/api/match?meta=1&id="+mid);if(j.ok)S.meta[mid]=j}catch(e){}}));
   render();
 }
 async function loadDetail(mid){
   if(!S.live)return;
-  try{const r=await fetch("/api/match?id="+mid,{cache:"no-store"});const j=await r.json();if(j.ok)S.det[mid]=j}catch(e){}
+  try{const j=await getJSON("/api/match?id="+mid);if(j.ok)S.det[mid]=j}catch(e){}
+  render();
+}
+async function loadTeam(id){
+  if(!S.live||R[id]||S.teams[id])return;
+  try{const j=await getJSON("/api/team?id="+id);if(j.ok)S.teams[id]=j}catch(e){}
   render();
 }
 function refresh(){
   if(document.visibilityState==="hidden")return;
   loadResults().then(()=>S.open.forEach(mid=>{const d=S.det[mid];if(!d||!d.done)loadDetail(mid)}));
 }
+
 function buildSelect(L){
   const sel=$("team");sel.innerHTML="";
   ["E","2","3","R"].forEach(lg=>{
@@ -302,6 +352,7 @@ function buildSelect(L){
   });
   sel.value=S.team;
 }
+const CHEV='<svg class="chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
 function render(){
   const L=T[S.lang];document.documentElement.lang=S.lang;
   ["et","ru","en"].forEach(l=>$("l-"+l).setAttribute("aria-pressed",l===S.lang));
@@ -311,21 +362,27 @@ function render(){
   buildSelect(L);
   const t=OURS.find(x=>x.id===S.team);const r=R[t.id];
   $("teamcard").innerHTML=`<h2>${esc(t.name)}</h2><div class="meta"><span class="chip league">${L.lg[t.lg]}</span><span class="chip">${groupLabel(t,L)}</span><span class="chip">${r[0].length+r[1].length} ${L.players}</span></div>${rosterHTML(t.id,L)}`;
-  const games=$("games");
-  if(S.day===2){$("t-hint").textContent="";$("livebar").hidden=true;games.innerHTML=`<div class="card empty"><b>${L.e2t}</b>${L.e2}</div>`;return}
-  $("t-hint").textContent=L.hint;
   const lb=$("livebar");lb.hidden=!S.live;
   if(S.live){lb.className="livebar"+(S.err?" err":"");lb.textContent=S.err?L.err:L.live+(S.fetched?" · "+L.upd+" "+tallinnTime(S.fetched):"")}
-  const list=MATCHES.filter(m=>m[0]===t.id).sort((a,b)=>a[2].localeCompare(b[2]));
+  const day=S.day===1?DAY1:DAY2;
+  const list=allMatches().filter(m=>m.team===t.id&&m.date===day).sort((a,b)=>a.time.localeCompare(b.time));
+  const games=$("games");
+  if(!list.length){
+    $("t-hint").textContent="";
+    games.innerHTML=S.day===2?`<div class="card empty"><b>${L.e2t}</b>${L.e2}</div>`:"";
+    return;
+  }
+  $("t-hint").textContent=L.hint;
   const now=nowTallinn();let nextFound=false;
   games.innerHTML=list.map(m=>{
-    const start=m[1]+"T"+m[2],end=addMin(start,60);
+    const start=m.date+"T"+m.time,end=addMin(start,60);
     let cls="",badge="";
     if(now>=start&&now<end){cls="is-now";badge=`<span class="badge now">${L.now}</span>`}
-    else if(now>=end&&now.slice(0,10)===m[1]){cls="past"}
-    else if(now<start&&now.slice(0,10)===m[1]&&!nextFound){nextFound=true;cls="is-next";badge=`<span class="badge next">${L.next}</span>`}
-    const key=String(m[4]);const open=S.open.has(key);
-    return `<div class="card game ${cls}" data-open="${open}"><button type="button" class="row" data-k="${key}" aria-expanded="${open}"><span class="time">${m[2]}</span><span class="opp"><small>${L.vs}</small><b>${esc(NAMES[m[3]])}</b>${badge}</span>${scorePill(m)}<svg class="chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>${open?`<div class="detail">${gamesHTML(m,L)}${S.live?`<div class="sub">${L.lineup}</div>`:""}${rosterHTML(m[3],L)}<a class="tslink" href="${TS+m[4]}" target="_blank" rel="noopener">${L.ts} ↗</a></div>`:""}</div>`;
+    else if(now>=end&&now.slice(0,10)===m.date){cls="past"}
+    else if(now<start&&now.slice(0,10)===m.date&&!nextFound){nextFound=true;cls="is-next";badge=`<span class="badge next">${L.next}</span>`}
+    const open=S.open.has(m.mid);
+    const stage=m.stage?`<small class="stage">${esc(m.stage)}</small>`:"";
+    return `<div class="card game ${cls}" data-open="${open}"><button type="button" class="row" data-k="${m.mid}" data-opp="${m.opp}" aria-expanded="${open}"><span class="time">${m.time}</span><span class="opp"><small>${L.vs}</small><b>${esc(m.oppName)}</b>${stage}${badge}</span>${scorePill(m)}${CHEV}</button>${open?`<div class="detail">${gamesHTML(m,L)}${S.live?`<div class="sub">${L.lineup}</div>`:""}${rosterHTML(m.opp,L)}<a class="tslink" href="${TS+m.mid}" target="_blank" rel="noopener">${L.ts} ↗</a></div>`:""}</div>`;
   }).join("");
 }
 
@@ -339,14 +396,15 @@ $("theme").addEventListener("click",()=>{const n=isDark()?"light":"dark";documen
 document.querySelectorAll(".langs button").forEach(b=>b.addEventListener("click",()=>{S.lang=b.dataset.l;store.set("lang",S.lang);render();paintThemeBtn()}));
 $("team").addEventListener("change",e=>{S.team=+e.target.value;S.open.clear();store.set("team",S.team);render()});
 document.querySelectorAll(".tabs button").forEach(b=>b.addEventListener("click",()=>{S.day=+b.dataset.d;render()}));
-$("games").addEventListener("click",e=>{const b=e.target.closest("button.row");if(!b)return;const k=b.dataset.k;if(S.open.has(k))S.open.delete(k);else{S.open.add(k);if(S.live&&!(S.det[k]&&S.det[k].done))loadDetail(k)}render()});
+$("games").addEventListener("click",e=>{
+  const b=e.target.closest("button.row");if(!b)return;const k=b.dataset.k;
+  if(S.open.has(k))S.open.delete(k);
+  else{S.open.add(k);if(S.live&&!(S.det[k]&&S.det[k].done))loadDetail(k);loadTeam(+b.dataset.opp)}
+  render();
+});
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change",paintThemeBtn);
 setInterval(()=>{render();refresh()},60000);
 document.addEventListener("visibilitychange",refresh);
-
-(function(){const g=document.getElementById("glyph").outerHTML.replace('fill="#0E1630"','fill="#0E1630"');
- const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="35 35 1170 1170"><circle cx="620" cy="620" r="585" fill="#FFFFFF"/>${g}</svg>`;
- const l=document.createElement("link");l.rel="icon";l.href="data:image/svg+xml,"+encodeURIComponent(svg);document.head.appendChild(l)})();
 
 render();paintThemeBtn();loadResults();
 </script>
