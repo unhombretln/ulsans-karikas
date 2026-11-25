@@ -15,7 +15,7 @@ module.exports = async (req, res) => {
     if (req.query.meta) {
       // Which two teams play: this does not change, so the CDN may keep it for 6 hours.
       res.setHeader('Cache-Control', 'public, s-maxage=21600, stale-while-revalidate=3600');
-      return res.end(JSON.stringify({ ok: true, id: +id, homeId: data.homeId, awayId: data.awayId }));
+      return res.end(JSON.stringify({ ok: true, id: +id, homeId: data.homeId, awayId: data.awayId, date: data.date, time: data.time }));
     }
     const done = data.games.length > 0 && data.games.every(g => g.w);
     // A finished match does not change, so it can be cached for an hour; a running one for a minute.
