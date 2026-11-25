@@ -280,7 +280,7 @@ const TX3={
   days:["Reede 27.11","Laupäev 28.11","Pühapäev 29.11"],friD:"Küsi hotelli sisseregistreerimisel.",satB:"Paketis, kui on tasutud 2 ööd: hotellis, kus elad. Muidu paketis ei ole.",
   same:"Söögiajad on Kääriku ja Tehvandi sööklas samad.",
   satWhere:v=>`Laupäeval sööd seal, kus mängid: Tehvandil mängijad (2. liiga) Tehvandi hotelli buffees, Käärikul mängijad Käärikul, olenemata majutusest. Sinu võistkond: <b>${v}</b>.`,
-  sunWhere:"Hotellis, kus elad.",sunL:"Paketis. Kus: Kääriku.",
+  sunWhere:"Hotellis, kus elad.",sunL:"Kõik söövad Käärikul. Paketis, kui on tasutud 2 ööd. Kui tasutud 1 öö: soovi korral telli laupäeval hotelli vastuvõtust (ööpäev ette) ja tasu ise.",
   notes:["Toitu sööklast kaasa võtta ei saa.","Ilma majutuseta osalejad tellivad ja tasuvad söögi alati ise."],
   memo:"Allikas: korraldajate meelespea ja klubi info"},
  ru:{tabs:[["Суббота","28.11"],["Воскресенье","29.11"],["Питание","27–29.11"]],meals:"Питание",
@@ -289,7 +289,7 @@ const TX3={
   days:["Пятница 27.11","Суббота 28.11","Воскресенье 29.11"],friD:"Спроси при заезде в отель.",satB:"Входит, если оплачены 2 ночи: в отеле, где живёшь. Иначе не входит.",
   same:"Время одинаковое в столовых Kääriku и Tehvandi.",
   satWhere:v=>`В субботу ешь там, где играешь: кто в Tehvandi (2. liiga) — в буфете отеля Tehvandi, кто в Kääriku — в Kääriku, где бы ни жил. Твоя команда: <b>${v}</b>.`,
-  sunWhere:"В отеле, где живёшь.",sunL:"Входит в пакет. Где: Kääriku.",
+  sunWhere:"В отеле, где живёшь.",sunL:"Все обедают в Kääriku. Входит, если оплачены 2 ночи. Если оплачена 1 ночь: по желанию закажи в субботу на ресепшене отеля (за сутки) и оплати сам.",
   notes:["Еду из столовой выносить нельзя.","Если живёшь не в отеле турнира, питание всегда заказываешь и оплачиваешь сам."],
   memo:"Источник: памятка организаторов и информация клуба"},
  en:{tabs:[["Saturday","28.11"],["Sunday","29.11"],["Meals","27–29.11"]],meals:"Meals",
@@ -298,7 +298,7 @@ const TX3={
   days:["Friday 27.11","Saturday 28.11","Sunday 29.11"],friD:"Ask when you check in at the hotel.",satB:"Included if you paid for 2 nights: at the hotel you stay in. Otherwise not included.",
   same:"Times are the same in the Kääriku and Tehvandi canteens.",
   satWhere:v=>`On Saturday you eat where you play: Tehvandi players (2. liiga) at the Tehvandi hotel buffet, Kääriku players at Kääriku, wherever you stay. Your team: <b>${v}</b>.`,
-  sunWhere:"At the hotel you stay in.",sunL:"Included. Where: Kääriku.",
+  sunWhere:"At the hotel you stay in.",sunL:"Everyone eats at Kääriku. Included if you paid for 2 nights. With 1 night: if you want it, order at the hotel reception on Saturday (a day ahead) and pay yourself.",
   notes:["Food can't be taken out of the canteen.","Without tournament accommodation you always order and pay for meals yourself."],
   memo:"Source: organisers' memo and club info"}};
 Object.keys(TX3).forEach(l=>Object.assign(T[l],TX3[l]));
@@ -312,7 +312,7 @@ function mealsHTML(t,L){
       ${row(L.mb,MEAL_TIMES.b,"cond",L.satB)}${row(L.ml,MEAL_TIMES.l,"inc",L.inc)}${row(L.md,MEAL_TIMES.d,"inc",L.inc)}
       <div class="mwhere">${L.satWhere(venue)}</div></div>
     <div class="card mday"><h3>${L.days[2]}</h3>
-      ${row(L.mb,MEAL_TIMES.b,"inc",L.inc+". "+L.sunWhere)}${row(L.ml,MEAL_TIMES.l,"inc",L.sunL)}${row(L.md,"—","no",L.no)}</div>
+      ${row(L.mb,MEAL_TIMES.b,"inc",L.inc+". "+L.sunWhere)}${row(L.ml,MEAL_TIMES.l,"cond",L.sunL)}${row(L.md,"—","no",L.no)}</div>
     <ul class="mnotes">${L.notes.map(n=>`<li>${n}</li>`).join("")}</ul>
     <a class="tslink" href="${MEMO}" target="_blank" rel="noopener">${L.memo} ↗</a>
   </div>`;
