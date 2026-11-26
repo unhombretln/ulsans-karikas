@@ -362,11 +362,11 @@ function mealsHTML(t,L){
 }
 const TX4={
  et:{mClub:"Ulsans",mAll:"Kogu turniir",adays:[["Reede","27.11"],["Laupäev","28.11"],["Pühapäev","29.11"]],all:"Kõik",
-  aHint:"Puuduta mängu, et näha tulemusi",aNone:"Selle päeva mänge pole",aErr:"Turniiri lehega pole ühendust, proovin uuesti",ours:"Ulsans",matches:n=>`${n} mängu`},
+  aHint:"Puuduta mängu, et näha tulemusi",aNone:"Selle päeva mänge pole",aSun:"Pühapäeva paarid selguvad pärast laupäeva mänge ja ilmuvad siia ise.",aErr:"Turniiri lehega pole ühendust, proovin uuesti",ours:"Ulsans",matches:n=>`${n} mängu`},
  ru:{mClub:"Ulsans",mAll:"Весь турнир",adays:[["Пятница","27.11"],["Суббота","28.11"],["Воскресенье","29.11"]],all:"Все",
-  aHint:"Нажми на матч, чтобы увидеть результаты",aNone:"В этот день матчей нет",aErr:"Нет связи с сайтом турнира, пробую снова",ours:"Ulsans",matches:n=>`матчей: ${n}`},
+  aHint:"Нажми на матч, чтобы увидеть результаты",aNone:"В этот день матчей нет",aSun:"Пары воскресенья станут известны после субботних игр и появятся здесь сами.",aErr:"Нет связи с сайтом турнира, пробую снова",ours:"Ulsans",matches:n=>`матчей: ${n}`},
  en:{mClub:"Ulsans",mAll:"Whole tournament",adays:[["Friday","27.11"],["Saturday","28.11"],["Sunday","29.11"]],all:"All",
-  aHint:"Tap a match to see results",aNone:"No matches on this day",aErr:"Can't reach the tournament site, retrying",ours:"Ulsans",matches:n=>`${n} matches`}};
+  aHint:"Tap a match to see results",aNone:"No matches on this day",aSun:"Sunday pairings are set after Saturday's matches and will appear here by themselves.",aErr:"Can't reach the tournament site, retrying",ours:"Ulsans",matches:n=>`${n} matches`}};
 Object.keys(TX4).forEach(l=>Object.assign(T[l],TX4[l]));
 const LEAGUES=["Meistriliiga","Esiliiga","2.liiga","3.liiga","Rahvaliiga"];
 const LEAGUE_LABEL={"Meistriliiga":"Meistriliiga","Esiliiga":"Esiliiga","2.liiga":"2. liiga","3.liiga":"3. liiga","Rahvaliiga":"Rahvaliiga"};
@@ -595,7 +595,7 @@ function renderAll(L){
   if(!box||!box.matches){out.innerHTML=S.live===false?`<div class="card empty">${L.aErr}</div>`:`<p class="note">${L.loading}</p>`;return}
   const list=box.matches.filter(m=>{const lg=drawLabel(m.draw,L).league;return !S.league||lg===S.league})
     .sort((a,b)=>(a.time||"").localeCompare(b.time||"")||LEAGUES.indexOf(drawLabel(a.draw,L).league)-LEAGUES.indexOf(drawLabel(b.draw,L).league)||(+a.court||0)-(+b.court||0));
-  if(!list.length){out.innerHTML=`<div class="card empty">${L.aNone}</div>`;return}
+  if(!list.length){out.innerHTML=`<div class="card empty">${S.aday===ADAYS[2]&&!box.matches.length?L.aSun:L.aNone}</div>`;return}
   const now=nowTallinn(),groups=[];
   list.forEach(m=>{const g=groups[groups.length-1];if(g&&g.time===m.time)g.items.push(m);else groups.push({time:m.time,items:[m]})});
   out.innerHTML=groups.map(g=>{
