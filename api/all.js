@@ -3,6 +3,7 @@
 const { TOURNAMENT, fetchPage, parseMatchList, text } = require('../lib/parse');
 
 const DAYS = { '27': '20261127', '28': '20261128', '29': '20261129' };
+const ISO = d => `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6)}`;
 
 module.exports = async (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -13,7 +14,7 @@ module.exports = async (req, res) => {
   }
   try {
     const html = await fetchPage('matches.aspx?id=' + TOURNAMENT + '&d=' + DAYS[day]);
-    const matches = parseMatchList(html);
+    const matches = parseMatchList(html, ISO(DAYS[day]));
     res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=60');
     const out = { ok: true, day: +day, fetched: new Date().toISOString(), count: matches.length, matches };
     if (req.query.debug) {
