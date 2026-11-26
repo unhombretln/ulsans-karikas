@@ -632,11 +632,11 @@ function renderAll(L){
 }
 function render(){
   const L=T[S.lang];document.documentElement.lang=S.lang;
+  ["et","ru","en"].forEach(l=>$("l-"+l).setAttribute("aria-pressed",l===S.lang));
   $("m-club").textContent=L.mClub;$("m-all").textContent=L.mAll;
   $("m-club").setAttribute("aria-pressed",S.mode==="club");$("m-all").setAttribute("aria-pressed",S.mode==="all");
   $("clubview").hidden=S.mode!=="club";$("allview").hidden=S.mode!=="all";
   if(S.mode==="all"){$("t-src").textContent=L.src;$("t-site").textContent=L.site;renderAll(L);return}
-  ["et","ru","en"].forEach(l=>$("l-"+l).setAttribute("aria-pressed",l===S.lang));
   $("t-team").textContent=L.team;
   [1,2,3].forEach(n=>{const b=$("d"+n);b.innerHTML=`<span>${n===3?FORK:""}${L.tabs[n-1][0]}</span><small>${L.tabs[n-1][1]}</small>`;b.setAttribute("aria-selected",S.day===n)});
   $("t-sched").textContent=L.sched;$("t-src").textContent=L.src;$("t-site").textContent=L.site;
