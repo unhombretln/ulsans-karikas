@@ -91,6 +91,33 @@ select{appearance:none;-webkit-appearance:none;width:100%;font:600 17px/1.2 var(
 .opt .br{display:block;font-size:12.5px;color:var(--muted);margin-top:1px}
 .optrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin-top:8px;font-size:14.5px}
 .optrow .t{font:700 20px/1 var(--f-display);font-variant-numeric:tabular-nums;color:var(--fg)}
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mode{display:flex;align-items:center;justify-content:center;gap:8px;min-height:50px;padding:10px 12px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);color:var(--fg);font:700 16px/1.15 var(--f-display);letter-spacing:.02em;cursor:pointer;text-align:center}
+.mode svg{flex:none}
+.mode[aria-pressed="true"]{background:var(--blue);border-color:var(--blue);color:#fff;box-shadow:0 2px 8px rgba(31,79,209,.28)}
+.view{display:flex;flex-direction:column;gap:14px}
+.lchips{display:flex;flex-wrap:wrap;gap:6px}
+.lchip{border:1.5px solid var(--line);background:var(--surface);color:var(--fg);font:600 13.5px/1 var(--f-body);padding:8px 11px;border-radius:999px;cursor:pointer}
+.lchip[aria-pressed="true"]{background:var(--fg);border-color:var(--fg);color:var(--bg)}
+.tgroup{display:flex;flex-direction:column;gap:8px}
+.thead{display:flex;align-items:center;gap:10px;margin-top:4px}
+.thead .t{font:700 20px/1 var(--f-display);font-variant-numeric:tabular-nums;color:var(--cyan)}
+.thead.now .t{color:var(--coral)}
+.thead .cnt{font-size:12.5px;color:var(--muted)}
+.am .row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:4px 12px;align-items:center;width:100%;padding:11px 14px;background:transparent;border:0;color:inherit;text-align:left;cursor:pointer;font:inherit}
+.am .lg{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;font-size:12.5px;color:var(--muted)}
+.am .lg .court{font-size:13px;padding:3px 6px}
+.am .lg .venue{margin-top:0}
+.am .vs{min-width:0;display:flex;flex-direction:column;gap:2px;font-size:15.5px;line-height:1.25}
+.am .vs span{overflow-wrap:anywhere}
+.am .vs .w{font-weight:700}
+.am.ours{border-color:var(--blue);background:color-mix(in srgb,var(--blue) 7%,var(--surface))}
+.am .ourtag{font:700 11px/1 var(--f-body);letter-spacing:.06em;text-transform:uppercase;color:#fff;background:var(--blue);padding:4px 6px;border-radius:5px}
+.am .detail{padding:0 14px 12px}
+.pill.done{background:var(--surface-2);color:var(--fg)}
+.agm{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:10px;align-items:center;padding:7px 0;border-top:1px solid var(--line)}
+.agm:first-child{border-top:0}
+.agm .pp span{display:block}.agm .pp .w{font-weight:700}
 .meals{display:flex;flex-direction:column;gap:10px}
 .mday{padding:14px}
 .mday h3{margin:0 0 8px;font-family:var(--f-display);font-size:17px;font-weight:700}
@@ -127,7 +154,7 @@ select{appearance:none;-webkit-appearance:none;width:100%;font:600 17px/1.2 var(
 .sect span{font-size:13px;color:var(--muted)}
 footer{font-size:12.5px;color:var(--muted);text-align:center;display:flex;flex-direction:column;gap:4px;padding-top:6px}
 footer a{color:var(--cyan)}
-@media (max-width:380px){.brand span{display:none}.game .detail{padding-left:14px}}
+@media (max-width:380px){.brand span{display:none}.game .detail{padding-left:14px}.mode{font-size:15px}}
 @media (prefers-reduced-motion:reduce){.chev{transition:none}}
 html{-webkit-text-size-adjust:100%}
 body{margin:0}
@@ -163,6 +190,11 @@ body{margin:0}
 
 <main>
   <div class="wrap">
+    <div class="modes" role="group" aria-label="View">
+      <button type="button" class="mode" id="m-club" data-m="club"></button>
+      <button type="button" class="mode" id="m-all" data-m="all"></button>
+    </div>
+    <div id="clubview" class="view">
     <div class="pick">
       <label class="lbl" for="team" id="t-team">Võistkond</label>
       <div class="selwrap">
@@ -179,6 +211,17 @@ body{margin:0}
     <div class="sect"><label class="lbl" id="t-sched"></label><span id="t-hint"></span></div>
     <div class="livebar" id="livebar" hidden></div>
     <div class="games" id="games"></div>
+    </div>
+    <div id="allview" class="view" hidden>
+      <div class="tabs" role="tablist">
+        <button type="button" role="tab" class="atab" id="a27" data-a="2026-11-27"></button>
+        <button type="button" role="tab" class="atab" id="a28" data-a="2026-11-28"></button>
+        <button type="button" role="tab" class="atab" id="a29" data-a="2026-11-29"></button>
+      </div>
+      <div class="lchips" id="lchips" role="group"></div>
+      <div class="livebar" id="alivebar" hidden></div>
+      <div class="games" id="agames"></div>
+    </div>
     <footer><span id="t-src"></span><a id="t-site" href="https://www.tournamentsoftware.com/sport/club.aspx?id=9CA77EC2-61DB-4937-B9AC-024A0704CA09&club=15" target="_blank" rel="noopener"></a></footer>
   </div>
 </main>
@@ -317,6 +360,16 @@ function mealsHTML(t,L){
     <a class="tslink" href="${MEMO}" target="_blank" rel="noopener">${L.memo} ↗</a>
   </div>`;
 }
+const TX4={
+ et:{mClub:"Ulsans",mAll:"Kogu turniir",adays:[["Reede","27.11"],["Laupäev","28.11"],["Pühapäev","29.11"]],all:"Kõik",
+  aHint:"Puuduta mängu, et näha tulemusi",aNone:"Selle päeva mänge pole",aErr:"Turniiri lehega pole ühendust, proovin uuesti",ours:"Ulsans",matches:n=>`${n} mängu`},
+ ru:{mClub:"Ulsans",mAll:"Весь турнир",adays:[["Пятница","27.11"],["Суббота","28.11"],["Воскресенье","29.11"]],all:"Все",
+  aHint:"Нажми на матч, чтобы увидеть результаты",aNone:"В этот день матчей нет",aErr:"Нет связи с сайтом турнира, пробую снова",ours:"Ulsans",matches:n=>`матчей: ${n}`},
+ en:{mClub:"Ulsans",mAll:"Whole tournament",adays:[["Friday","27.11"],["Saturday","28.11"],["Sunday","29.11"]],all:"All",
+  aHint:"Tap a match to see results",aNone:"No matches on this day",aErr:"Can't reach the tournament site, retrying",ours:"Ulsans",matches:n=>`${n} matches`}};
+Object.keys(TX4).forEach(l=>Object.assign(T[l],TX4[l]));
+const LEAGUES=["Meistriliiga","Esiliiga","2.liiga","3.liiga","Rahvaliiga"];
+const LEAGUE_LABEL={"Meistriliiga":"Meistriliiga","Esiliiga":"Esiliiga","2.liiga":"2. liiga","3.liiga":"3. liiga","Rahvaliiga":"Rahvaliiga"};
 const LEAGUE_ON_SITE={E:"Esiliiga","2":"2.liiga","3":"3.liiga",R:"Rahvaliiga"};
 const TS="https://www.tournamentsoftware.com/sport/teammatch.aspx?id=9CA77EC2-61DB-4937-B9AC-024A0704CA09&match=";
 const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
@@ -327,19 +380,22 @@ function phoneLang(){
   return "en";
 }
 const DAY1="2026-11-28",DAY2="2026-11-29";
+const ADAYS=["2026-11-27","2026-11-28","2026-11-29"];
 const S={lang:store.get("lang")||phoneLang(),team:+store.get("team")||45,day:1,open:new Set(),
-  live:null,err:false,res:{},det:{},meta:{},teams:{},fetched:null,version:null,draws:null,courtByMid:{},venueByMid:{}};
+  live:null,err:false,res:{},det:{},meta:{},teams:{},fetched:null,version:null,draws:null,courtByMid:{},venueByMid:{},
+  mode:store.get("mode")==="all"?"all":"club",aday:null,league:store.get("league")||"",all:{},aopen:new Set()};
 /* After an automatic reload for a new version: put back the open matches, day tab and scroll position. */
 /* Version of this page, stamped in at build time; compared with what the server reports. */
 const BUILD="__BUILD__";
 const RESTORE_KEY="ulsans-restore";
 let restoreY=null;
 try{const x=JSON.parse(sessionStorage.getItem(RESTORE_KEY)||"null");sessionStorage.removeItem(RESTORE_KEY);
-  if(x){(x.open||[]).forEach(k=>S.open.add(String(k)));if([1,2,3].includes(x.day))S.day=x.day;restoreY=x.y||0}}catch(e){}
+  if(x){(x.open||[]).forEach(k=>S.open.add(String(k)));if([1,2,3].includes(x.day))S.day=x.day;restoreY=x.y||0;
+    if(x.mode==="all"||x.mode==="club")S.mode=x.mode;if(ADAYS.includes(x.aday))S.aday=x.aday;(x.aopen||[]).forEach(k=>S.aopen.add(String(k)))}}catch(e){}
 /* A newer version of the page was deployed: reload once, keeping what the viewer had open. */
 function reloadForUpdate(v){
   try{if(sessionStorage.getItem("ulsans-reloaded")===v)return;sessionStorage.setItem("ulsans-reloaded",v);
-    sessionStorage.setItem(RESTORE_KEY,JSON.stringify({open:[...S.open],day:S.day,y:window.scrollY||0}))}catch(e){return}
+    sessionStorage.setItem(RESTORE_KEY,JSON.stringify({open:[...S.open],day:S.day,y:window.scrollY||0,mode:S.mode,aday:S.aday,aopen:[...S.aopen]}))}catch(e){return}
   location.reload();
 }
 if(!T[S.lang])S.lang="en";
@@ -355,6 +411,8 @@ function nowTallinn(){
   return p.replace(" ","T");
 }
 if(restoreY===null&&nowTallinn().slice(0,10)>=DAY2)S.day=2;
+if(!S.aday){const today=nowTallinn().slice(0,10);S.aday=ADAYS.includes(today)?today:(today>ADAYS[2]?ADAYS[2]:ADAYS[0])}
+if(S.league&&!LEAGUES.includes(S.league))S.league="";
 function addMin(dt,m){const d=new Date(dt+":00Z");d.setUTCMinutes(d.getUTCMinutes()+m);return d.toISOString().slice(0,16)}
 const tallinnTime=iso=>new Intl.DateTimeFormat("et-EE",{timeZone:"Europe/Tallinn",hour:"2-digit",minute:"2-digit"}).format(new Date(iso));
 const names=a=>a&&a.length?a.map(n=>esc(flip(n))).join(" / "):"—";
@@ -450,10 +508,19 @@ async function loadTeam(id){
   try{const j=await getJSON("/api/team?id="+id);if(j.ok)S.teams[id]=j}catch(e){}
   render();
 }
+async function loadAll(day){
+  if(!S.live)return;
+  try{
+    const j=await getJSON("/api/all?day="+day.slice(8));
+    S.all[day]=j.ok?{ok:true,matches:j.matches||[],fetched:j.fetched}:{...(S.all[day]||{}),ok:false};
+  }catch(e){S.all[day]={...(S.all[day]||{}),ok:false}}
+  render();
+}
 function refresh(){
   if(document.visibilityState==="hidden")return;
   loadResults().then(()=>S.open.forEach(mid=>{const d=S.det[mid];if(!d||!d.done)loadDetail(mid)}));
   if(++drawsTick%5===0)loadDraws();
+  if(S.mode==="all"){loadAll(S.aday);S.aopen.forEach(mid=>{const d=S.det[mid];if(!d||!d.done)loadDetail(mid)})}
 }
 
 function buildSelect(L){
@@ -501,8 +568,61 @@ function sundayOptions(t,L){
 const PIN='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>';
 const venueHTML=v=>v?`<span class="venue">${PIN}${esc(v)}</span>`:"";
 const CHEV='<svg class="chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
+/* Whole-tournament view: every team match of the chosen day, by time, filterable by league. */
+const OUR_NAME=n=>/^Ulsans(\s|$)/.test(n||"");
+function drawLabel(d,L){
+  const parts=(d||"").split(/\s+–\s+/).filter((x,i,a)=>a.indexOf(x)===i);
+  const lg=parts[0]||"";
+  const rest=parts.slice(1).map(x=>{const g=x.match(/^Group (\w+)$/);return g?L.group.charAt(0).toUpperCase()+L.group.slice(1)+" "+g[1]:bracketName(lg+" – "+x,L)});
+  return {league:lg,label:[LEAGUE_LABEL[lg]||lg,...rest].join(" · ")};
+}
+function allGamesHTML(mid,L){
+  const d=S.det[mid];
+  if(!d)return `<p class="note">${L.loading}</p>`;
+  const played=(d.games||[]).filter(g=>g.sets.length||g.note);
+  if(!played.length)return `<p class="note">${L.noRes}</p>`;
+  return '<div class="gms">'+d.games.map(g=>{
+    const sets=g.sets.map(x=>x.join("-")).join(" ")||esc(g.note||"");
+    return `<div class="agm"><span class="ev">${L.ev[g.ev]||esc(g.ev)}</span><span class="pp"><span class="${g.w===1?"w":""}">${names(g.h)}</span><span class="${g.w===2?"w":""}">${names(g.a)}</span></span><span class="sets">${sets}</span></div>`;
+  }).join("")+"</div>";
+}
+function renderAll(L){
+  ADAYS.forEach((d,i)=>{const b=$("a"+d.slice(8));b.innerHTML=`<span>${L.adays[i][0]}</span><small>${L.adays[i][1]}</small>`;b.setAttribute("aria-selected",S.aday===d)});
+  $("lchips").innerHTML=["",...LEAGUES].map(k=>`<button type="button" class="lchip" data-lg="${k}" aria-pressed="${S.league===k}">${k?LEAGUE_LABEL[k]:L.all}</button>`).join("");
+  const box=S.all[S.aday],lb=$("alivebar"),out=$("agames");
+  lb.hidden=!box;
+  if(box){lb.className="livebar"+(box.ok===false?" err":"");lb.textContent=box.ok===false?L.aErr:L.aHint+(box.fetched?" · "+L.upd+" "+tallinnTime(box.fetched):"")}
+  if(!box||!box.matches){out.innerHTML=S.live===false?`<div class="card empty">${L.aErr}</div>`:`<p class="note">${L.loading}</p>`;return}
+  const list=box.matches.filter(m=>{const lg=drawLabel(m.draw,L).league;return !S.league||lg===S.league})
+    .sort((a,b)=>(a.time||"").localeCompare(b.time||"")||LEAGUES.indexOf(drawLabel(a.draw,L).league)-LEAGUES.indexOf(drawLabel(b.draw,L).league)||(+a.court||0)-(+b.court||0));
+  if(!list.length){out.innerHTML=`<div class="card empty">${L.aNone}</div>`;return}
+  const now=nowTallinn(),groups=[];
+  list.forEach(m=>{const g=groups[groups.length-1];if(g&&g.time===m.time)g.items.push(m);else groups.push({time:m.time,items:[m]})});
+  out.innerHTML=groups.map(g=>{
+    const start=S.aday+"T"+g.time,isNow=now>=start&&now<addMin(start,60);
+    return `<div class="tgroup"><div class="thead${isNow?" now":""}"><span class="t">${esc(g.time||"—")}</span>${isNow?`<span class="badge now">${L.now}</span>`:""}<span class="cnt">${L.matches(g.items.length)}</span></div>`+
+      g.items.map(m=>{
+        const k=String(m.mid),open=S.aopen.has(k),dl=drawLabel(m.draw,L);
+        const ours=OUR_NAME(m.home)||OUR_NAME(m.away);
+        let pill="",hw="",aw="";
+        if(m.score){const [a,b]=m.score,done=Math.max(a,b)>=100||(Math.max(a,b)<=5&&a+b>=5);
+          if(done){hw=a>b?"w":"";aw=b>a?"w":""}
+          let cls=done?"done":"live";
+          if(done&&ours){const ourWin=(OUR_NAME(m.home)&&a>b)||(OUR_NAME(m.away)&&b>a);cls=ourWin?"win":"loss"}
+          pill=`<span class="pill ${cls}">${a}:${b}</span>`}
+        return `<div class="card am${ours?" ours":""}" data-open="${open}"><button type="button" class="row" data-am="${k}" aria-expanded="${open}">
+          <span class="lg">${ours?`<span class="ourtag">${L.ours}</span>`:""}<span>${esc(dl.label)}</span>${m.court?`<span class="court">${L.court} ${esc(m.court)}</span>`:""}${venueHTML(m.venue)}</span>
+          <span class="vs"><span class="${hw}">${esc(m.home||"—")}</span><span class="${aw}">${esc(m.away||"—")}</span></span>${pill}${CHEV}</button>
+          ${open?`<div class="detail">${allGamesHTML(k,L)}<a class="tslink" href="${TS+k}" target="_blank" rel="noopener">${L.ts} ↗</a></div>`:""}</div>`;
+      }).join("")+"</div>";
+  }).join("");
+}
 function render(){
   const L=T[S.lang];document.documentElement.lang=S.lang;
+  $("m-club").textContent=L.mClub;$("m-all").textContent=L.mAll;
+  $("m-club").setAttribute("aria-pressed",S.mode==="club");$("m-all").setAttribute("aria-pressed",S.mode==="all");
+  $("clubview").hidden=S.mode!=="club";$("allview").hidden=S.mode!=="all";
+  if(S.mode==="all"){$("t-src").textContent=L.src;$("t-site").textContent=L.site;renderAll(L);return}
   ["et","ru","en"].forEach(l=>$("l-"+l).setAttribute("aria-pressed",l===S.lang));
   $("t-team").textContent=L.team;
   [1,2,3].forEach(n=>{const b=$("d"+n);b.innerHTML=`<span>${L.tabs[n-1][0]}</span><small>${L.tabs[n-1][1]}</small>`;b.setAttribute("aria-selected",S.day===n)});
@@ -547,7 +667,18 @@ const savedTheme=store.get("theme");if(savedTheme==="dark"||savedTheme==="light"
 $("theme").addEventListener("click",()=>{const n=isDark()?"light":"dark";document.documentElement.setAttribute("data-theme",n);store.set("theme",n);paintThemeBtn()});
 document.querySelectorAll(".langs button").forEach(b=>b.addEventListener("click",()=>{S.lang=b.dataset.l;store.set("lang",S.lang);render();paintThemeBtn()}));
 $("team").addEventListener("change",e=>{S.team=+e.target.value;S.open.clear();store.set("team",S.team);render()});
-document.querySelectorAll(".tabs button").forEach(b=>b.addEventListener("click",()=>{S.day=+b.dataset.d;render()}));
+document.querySelectorAll("#clubview .tabs button").forEach(b=>b.addEventListener("click",()=>{S.day=+b.dataset.d;render()}));
+document.querySelectorAll(".mode").forEach(b=>b.addEventListener("click",()=>{
+  S.mode=b.dataset.m;store.set("mode",S.mode);render();
+  if(S.mode==="all"&&!S.all[S.aday])loadAll(S.aday);
+}));
+document.querySelectorAll(".atab").forEach(b=>b.addEventListener("click",()=>{S.aday=b.dataset.a;render();loadAll(S.aday)}));
+$("lchips").addEventListener("click",e=>{const b=e.target.closest(".lchip");if(!b)return;S.league=b.dataset.lg;store.set("league",S.league);render()});
+$("agames").addEventListener("click",e=>{
+  const b=e.target.closest("button.row");if(!b)return;const k=b.dataset.am;
+  if(S.aopen.has(k))S.aopen.delete(k);else{S.aopen.add(k);if(S.live&&!(S.det[k]&&S.det[k].done))loadDetail(k)}
+  render();
+});
 $("games").addEventListener("click",e=>{
   const b=e.target.closest("button.row");if(!b)return;const k=b.dataset.k;
   if(S.open.has(k))S.open.delete(k);
@@ -558,7 +689,7 @@ matchMedia("(prefers-color-scheme: dark)").addEventListener("change",paintThemeB
 setInterval(()=>{render();refresh()},60000);
 document.addEventListener("visibilitychange",refresh);
 
-render();paintThemeBtn();loadResults().then(loadDraws);
+render();paintThemeBtn();loadResults().then(()=>{loadDraws();if(S.mode==="all")loadAll(S.aday)});
 if(restoreY)requestAnimationFrame(()=>window.scrollTo(0,restoreY));
 </script>
 </body>
