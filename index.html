@@ -132,6 +132,8 @@ select{appearance:none;-webkit-appearance:none;width:100%;font:600 17px/1.2 var(
 .mrow b{font-weight:600}
 .mrow .mt{font:700 16px/1.2 var(--f-display);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
 .mrow .ms{grid-column:1/-1;font-size:13.5px;color:var(--muted)}
+.mrow .ms:empty{display:none}
+.mrow.tight{border-top:0;padding-top:0}
 .mrow.inc .ms{color:var(--blue)}
 .mrow.ord .ms{color:var(--coral)}
 .mrow.cond .ms{color:var(--cyan)}
@@ -326,8 +328,8 @@ const TX3={
  et:{tabs:[["Laupäev","28.11"],["Pühapäev","29.11"],["Toitlustus","27.–29.11"]],meals:"Toitlustus",
   mb:"Hommikusöök",ml:"Lõunasöök",md:"Õhtusöök",inc:"Paketis",no:"Paketis ei ole",
   ord:"Telli hotelli fuajeest vähemalt 24 h ette ja tasu kohapeal. Ilma tellimata palume mitte sööma minna.",
-  days:["Reede 27.11","Laupäev 28.11","Pühapäev 29.11"],friD:"Paketis, kui on tasutud 2 ööd: seal, kus elad (Tehvandil elajad Tehvandil, Käärikul elajad Käärikul).",satB:"Paketis, kui on tasutud 2 ööd: hotellis, kus elad. Muidu paketis ei ole.",
-  same:"Söögiajad on Kääriku ja Tehvandi sööklas samad.",
+  days:["Reede 27.11","Laupäev 28.11","Pühapäev 29.11"],friD:"Paketis, kui on tasutud 2 ööd: sööd seal, kus elad.",satB:"Paketis, kui on tasutud 2 ööd: hotellis, kus elad. Muidu paketis ei ole.",
+  same:"Söögiajad on Kääriku ja Tehvandi sööklas samad, v.a reede õhtusöök.",
   satWhere:v=>`Laupäeval sööd seal, kus mängid: Tehvandil mängijad (2. liiga) Tehvandi hotelli buffees, Käärikul mängijad Käärikul, olenemata majutusest.${v?` Sinu võistkond: <b>${v}</b>.`:""}`,
   sunWhere:"Hotellis, kus elad.",sunL:"Kõik söövad Käärikul. Paketis, kui on tasutud 2 ööd. Kui tasutud 1 öö: soovi korral telli laupäeval hotelli vastuvõtust (ööpäev ette) ja tasu ise.",
   notes:["Toitu sööklast kaasa võtta ei saa.","Ilma majutuseta osalejad tellivad ja tasuvad söögi alati ise."],
@@ -335,8 +337,8 @@ const TX3={
  ru:{tabs:[["Суббота","28.11"],["Воскресенье","29.11"],["Питание","27–29.11"]],meals:"Питание",
   mb:"Завтрак",ml:"Обед",md:"Ужин",inc:"Входит в пакет",no:"Не входит в пакет",
   ord:"Заказать в фойе отеля минимум за 24 часа и оплатить на месте. Без заказа не приходить.",
-  days:["Пятница 27.11","Суббота 28.11","Воскресенье 29.11"],friD:"Входит, если оплачены 2 ночи: там, где живёшь (живёшь в Tehvandi — ужин в Tehvandi, в Kääriku — в Kääriku).",satB:"Входит, если оплачены 2 ночи: в отеле, где живёшь. Иначе не входит.",
-  same:"Время одинаковое в столовых Kääriku и Tehvandi.",
+  days:["Пятница 27.11","Суббота 28.11","Воскресенье 29.11"],friD:"Входит, если оплачены 2 ночи: ужинаешь там, где живёшь.",satB:"Входит, если оплачены 2 ночи: в отеле, где живёшь. Иначе не входит.",
+  same:"Время одинаковое в столовых Kääriku и Tehvandi, кроме ужина в пятницу.",
   satWhere:v=>`В субботу ешь там, где играешь: кто в Tehvandi (2. liiga) — в буфете отеля Tehvandi, кто в Kääriku — в Kääriku, где бы ни жил.${v?` Твоя команда: <b>${v}</b>.`:""}`,
   sunWhere:"В отеле, где живёшь.",sunL:"Все обедают в Kääriku. Входит, если оплачены 2 ночи. Если оплачена 1 ночь: по желанию закажи в субботу на ресепшене отеля (за сутки) и оплати сам.",
   notes:["Еду из столовой выносить нельзя.","Если живёшь не в отеле турнира, питание всегда заказываешь и оплачиваешь сам."],
@@ -344,8 +346,8 @@ const TX3={
  en:{tabs:[["Saturday","28.11"],["Sunday","29.11"],["Meals","27–29.11"]],meals:"Meals",
   mb:"Breakfast",ml:"Lunch",md:"Dinner",inc:"Included",no:"Not included",
   ord:"Order at the hotel lobby at least 24 h ahead and pay there. Please don't come without ordering.",
-  days:["Friday 27.11","Saturday 28.11","Sunday 29.11"],friD:"Included if you paid for 2 nights: where you stay (staying at Tehvandi — dinner at Tehvandi, at Kääriku — at Kääriku).",satB:"Included if you paid for 2 nights: at the hotel you stay in. Otherwise not included.",
-  same:"Times are the same in the Kääriku and Tehvandi canteens.",
+  days:["Friday 27.11","Saturday 28.11","Sunday 29.11"],friD:"Included if you paid for 2 nights: you eat where you stay.",satB:"Included if you paid for 2 nights: at the hotel you stay in. Otherwise not included.",
+  same:"Times are the same in the Kääriku and Tehvandi canteens, except Friday dinner.",
   satWhere:v=>`On Saturday you eat where you play: Tehvandi players (2. liiga) at the Tehvandi hotel buffet, Kääriku players at Kääriku, wherever you stay.${v?` Your team: <b>${v}</b>.`:""}`,
   sunWhere:"At the hotel you stay in.",sunL:"Everyone eats at Kääriku. Included if you paid for 2 nights. With 1 night: if you want it, order at the hotel reception on Saturday (a day ahead) and pay yourself.",
   notes:["Food can't be taken out of the canteen.","Without tournament accommodation you always order and pay for meals yourself."],
@@ -356,7 +358,7 @@ function mealsHTML(t,L){
   const venue=t?(t.lg==="2"?"Tehvandi":"Kääriku"):"";
   return `<div class="meals">
     <p class="optnote">${L.same}</p>
-    <div class="card mday"><h3>${L.days[0]}</h3>${row(L.md,"18:00–20:00","cond",L.friD)}</div>
+    <div class="card mday"><h3>${L.days[0]}</h3>${row(L.md+" · Tehvandi","18:00–19:30","cond","")}${row(L.md+" · Kääriku","18:00–20:30","cond tight","")}<div class="mrow cond tight"><span class="ms">${L.friD}</span></div></div>
     <div class="card mday"><h3>${L.days[1]}</h3>
       ${row(L.mb,MEAL_TIMES.b,"cond",L.satB)}${row(L.ml,MEAL_TIMES.l,"inc",L.inc)}${row(L.md,MEAL_TIMES.d,"inc",L.inc)}
       <div class="mwhere">${L.satWhere(venue)}</div></div>
